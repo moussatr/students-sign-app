@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  node:
+    container_name: node
+    build:
+      context: .
+      dockerfile: ./node/Dockerfile
+    ports:
+      - 4500:4500
+    volumes :
+      - ./app:/app
+    environment:
+      MONGO_URL: mongodb://root:root@mongo:27017/b3?authSource=admin
+
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+
+  mongo-express:
+    image: mongo-express
+    ports:
+      - 8083:8081
+    depends_on:
+      - mongo
+    restart: on-failure
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      ME_CONFIG_MONGODB_URL: mongodb://root:root@mongo:27017/
