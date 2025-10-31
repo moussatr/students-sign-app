@@ -1,3 +1,4 @@
+require('dotenv').config(); 
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
@@ -12,22 +13,29 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(session({
-    secret: 'Secret12',
-}
-));
+  secret: process.env.SESSION_SECRET || 'change_this_immediately',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // set true if using HTTPS
+}));
 
-mongoose.connect(process.env.MONGO_URL,
-    
- {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}, (error) => {
-    if (error) {
-        console.log(error);
-    } else {
-        console.log('BD connect');
-    }
+mongoose.set('strictQuery', false);
+
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URL;
+if (!mongoUri) {
+  console.error('ERROR: MONGODB_URI is not set. Add it to .env');
+  process.exit(1);
+}
+
+mongoose.connect(mongoUri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
 })
+.then(() => console.log('MongoDB connected'))
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
+});
 
 const classeRouter = require('./routes/classes');
 const studentRouter = require('./routes/students');
